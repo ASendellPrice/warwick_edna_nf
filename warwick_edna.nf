@@ -8,32 +8,6 @@ Nextflow pipeline for analysing environmental DNA samples
 Author: Ash Sendell-Price
 
 ========================================================================================
-Define initial parameters
-========================================================================================
-*/
-
-params.version = "0.1.0"
-
-/*
-========================================================================================
-Create FASTQ Pairs Channel
-========================================================================================
-*/
-
-Channel
-    .of(tuple(params.prefix, [params.R1, params.R2]))
-    .set { fastq_pairs }
-
-#!/usr/bin/env nextflow
-
-/*
-========================================================================================
-Nextflow pipeline for analysing environmental DNA samples
-========================================================================================
-
-Author: Ash Sendell-Price
-
-========================================================================================
 Define initial files
 ========================================================================================
 */
@@ -66,17 +40,19 @@ process fastqc_raw {
     tag "$prefix"
 
     input:
-    tuple val(prefix), file(fastqs)
+    file R1 from params.R1
+    file R2 from params.R2
 
     output:
-    tuple val(prefix), file("raw/${prefix}_R1_fastqc.zip"), file("raw/${prefix}_R1_fastqc.html"), 
-                  file("raw/${prefix}_R2_fastqc.zip"), file("raw/${prefix}_R2_fastqc.html")
+    file("${prefix}_R1_fastqc.zip")
+    file("${prefix}_R1_fastqc.html")
+    file("${prefix}_R2_fastqc.zip")
+    file("${prefix}_R2_fastqc.html")
 
     script:
     """
     fastqc \
-    --outdir raw \
-    ${fastqs[0]} ${fastqs[1]}
+    ${R1} ${R2}
     """
 }
 
@@ -122,7 +98,7 @@ workflow {
     // Create the channel for FASTQ pairs
     fastq_pairs
         // Run FastQC on the raw FASTQ files
-        | fastqc
+        | fastqc_raw
         // Run Trim Galore to trim and clean FASTQ files
         //| trim_galore
 }
