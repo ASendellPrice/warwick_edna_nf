@@ -41,7 +41,11 @@ process trim_galore {
 
     script:
     """
-    trim_galore --paired --output_dir trimmed --basename ${prefix} ${fastqs[0]} ${fastqs[1]}
+    trim_galore \
+    --paired \
+    --output_dir trimmed \
+    --gzip \
+    ${fastqs[0]} ${fastqs[1]}
     """
 }
 
