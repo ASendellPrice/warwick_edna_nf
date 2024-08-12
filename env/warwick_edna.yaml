@@ -1,0 +1,9 @@
+name: warwick_edna
+channels:
+- bioconda
+- forge
+dependencies:
+- fastqc
+- trimmomatic
+- blast
+- pia
