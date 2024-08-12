@@ -3,7 +3,8 @@ channels:
 - bioconda
 - forge
 dependencies:
-- fastqc
-- trimmomatic
-- blast
-- pia
+- blast=2.16.0
+- fastqc=0.12.1
+- java-jdk
+- perl-5.32.1
+- trimmomatic=0.39
