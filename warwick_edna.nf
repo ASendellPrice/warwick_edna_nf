@@ -8,15 +8,11 @@ Nextflow pipeline for analysing environmental DNA samples
 Author: Ash Sendell-Price
 
 ========================================================================================
-Define initial files
+Define initial parameters
 ========================================================================================
 */
 
 params.version = "0.1.0"
-
-params.R1 = file(params.R1)
-params.R2 = file(params.R2)
-params.prefix = params.prefix
 
 /*
 ========================================================================================
