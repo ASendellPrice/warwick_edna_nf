@@ -40,8 +40,7 @@ process fastqc_raw {
     tag "$prefix"
 
     input:
-    file R1 from params.R1
-    file R2 from params.R2
+    tuple val(prefix), file(R1), file(R2)
 
     output:
     file("${prefix}_R1_fastqc.zip")
@@ -59,46 +58,22 @@ process fastqc_raw {
 
 /*
 ========================================================================================
-Remove adaptors and trim low quality reads
-========================================================================================
-*/
-
-process trim_galore {
-    tag "$prefix"
-
-    input:
-    tuple val(prefix), file(fastqs)
-
-    output:
-    tuple val(prefix), file("${prefix}_R1_trimmed.fq.gz"), file("${prefix}_R2_trimmed.fq.gz")
-
-    script:
-    """
-    trim_galore \
-    --paired \
-    --output_dir trimmed \
-    --gzip \
-    ${fastqs[0]} ${fastqs[1]}
-    """
-}
-
-
-/*
-========================================================================================
 Workflow
 ========================================================================================
 */
 
 workflow {
-// Check if required parameters are defined
+    // Check if required parameters are defined
     if (!params.R1 || !params.R2 || !params.prefix) {
         error "Missing required parameters. Ensure R1, R2, and prefix are provided."
     }
 
     // Create the channel for FASTQ pairs
+    def fastq_pairs = Channel
+        .of(tuple(params.prefix, [params.R1, params.R2]))
+
+    // Run FastQC on the raw FASTQ files
     fastq_pairs
-        // Run FastQC on the raw FASTQ files
         | fastqc_raw
-        // Run Trim Galore to trim and clean FASTQ files
-        //| trim_galore
+
 }
