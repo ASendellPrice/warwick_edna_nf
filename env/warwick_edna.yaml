@@ -6,5 +6,6 @@ dependencies:
 - blast=2.16.0
 - fastqc=0.12.1
 - java-jdk
+- nextflow
 - perl-5.32.1
 - trimmomatic=0.39
