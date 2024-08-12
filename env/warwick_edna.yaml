@@ -5,7 +5,7 @@ channels:
 dependencies:
 - blast=2.16.0
 - fastqc=0.12.1
-- java-jdk
+- openjdk=11
 - nextflow
-- perl-5.32.1
+- perl
 - trimmomatic=0.39

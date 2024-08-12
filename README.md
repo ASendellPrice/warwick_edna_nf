@@ -11,11 +11,11 @@ conda env create -f env/warwick_edna.yaml
 conda activate warwick_edna
 
 nextflow run warwick_edna.nf \
---R1 test_data/M10-211123_S10_L001_R1_001.fastq.gz \
---R2 test_data/M10-211123_S10_L001_R2_001.fastq.gz
+--R1 test_data/M7-211123_S7_L001_R1_001.fastq.gz \
+--R2 test_data/M7-211123_S7_L001_R2_001.fastq.gz \
 --forward_primer GGGTTGGTAAATTTCGTGCCAGC \
 --reverse_prime CATAGTGGGGTATCTAATCCCAGTTTG \
---prefix M10-211123_S10
+--prefix M7-211123
 ```
 
 
