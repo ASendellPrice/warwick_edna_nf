@@ -7,5 +7,8 @@ dependencies:
 - fastqc=0.12.1
 - openjdk=11
 - nextflow
+- pandas
 - perl
-- trimmomatic=0.39
+- perl-db-file
+- trim-galore
+- multiqc
