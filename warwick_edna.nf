@@ -4,28 +4,17 @@ nextflow.enable.dsl=2
 
 /*
 ========================================================================================
-Nextflow pipeline for analysing environmental DNA samples
-Author: Ash Sendell-Price
-Usage:  nextflow run warwick_edna.nf --input_csv test_samples.csv --blast_db /home/u2271009/eDNA/bin/blast_db/nt --outdir results --taxa 7742 --bin /home/u2271009/warwick_edna_nf/bin -process.cpus 16
-
-========================================================================================
-
-========================================================================================
 Define input parameters
 ========================================================================================
 */
 
 params.input_csv = null
-params.blast_db = null
 params.taxa = null
 params.outdir = "results"
 
 // Error checking for input file
 if (params.input_csv == null) {
 	error "Please provide the input CSV file with --input_csv parameter."
-}
-if (params.blast_db == null) {
-	error "Please provide the path to blast database with --blast_db parameter"
 }
 
 // Print debug information
@@ -262,7 +251,7 @@ process pia {
 
 	script:
 	"""
-	cp -r /home/u2271009/warwick_edna_nf/bin/PIA/* .
+	cp -r $params.pia_dir/* .
 	perl PIA.pl -f ${rep_seq_fasta} -b ${blast_out}
 	mv *.PIA_output/* .
 	"""
