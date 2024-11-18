@@ -3,12 +3,14 @@ channels:
 - bioconda
 - forge
 dependencies:
+- bbmap
 - blast=2.16.0
 - fastqc=0.12.1
 - openjdk=11
 - nextflow
 - pandas
 - perl
-- perl-db-file
+- seqtk
 - trim-galore
+- mmseqs2
 - multiqc

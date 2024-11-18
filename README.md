@@ -3,7 +3,7 @@ A nextflow pipeline for the Warwick eDNA project.
 
 ## Dependencies
 The following dependencies are required:
-- Java v11 or later
+- Java v11 or later (required by nextflow)
 - Nextflow (see installation instructions [here](https://nextflow.io/docs/latest/install.html))
 - A conda installation e.g. [miniconda](https://docs.anaconda.com/miniconda/)
 - PIA (see installation instructions [here](https://github.com/Allaby-lab/PIA/))
@@ -27,32 +27,13 @@ conda activate warwick_edna
 
 # Launch nextflow pipeline
 nextflow run warwick_edna.nf -config config/warwick_edna.config \
---input_csv invertebrate_samples.csv \
---outdir results_invertebrate_primers_full_blast \
--process.cpus 16 -resume
+--input_csv test.csv --outdir results_test -process.cpus 16
 ```
-
-
-
-
-
-
-
-conda activate warwick_edna
-nextflow run warwick_edna.nf \
---input_csv original_V_samples.csv \
---blast_db /home/u2271009/eDNA/bin/blast_db/nt \
---outdir results_original_V_metazoa_blast \
---taxa 33208 -process.cpus 16 -resume
-
-
+**Note:** There is an optional parameter "--taxa" which can be parsed to restrict blast search to a specific taxanomic group. For example, if you want to search against metazoa only add the following: --taxa 33208
 
 ## To do
-
-- pia will need to be installed locally
 - update blast database (perl update_blastdb.pl --decompress nt)
 - add flag to change percent identity
 - taxaranks auto install - currently installed using pip
-
-
-
+- update how resources are allocated
+- add step which generates fastas for each taxa
