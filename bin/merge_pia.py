@@ -21,7 +21,6 @@ keyword = '_Basic.txt'
 current_dir = os.getcwd()  # Get the current working directory
 files = [f for f in os.listdir(current_dir) if os.path.isfile(f) and keyword in f]
 
-
 #Load first PIA file in list as pandas df 
 sampleID = files[0].split(".")[0]
 df = pd.read_csv(files[0], sep='\t', skiprows=11)
@@ -46,4 +45,3 @@ df = pd.merge(df, taxa, how = 'outer')
 
 # Write dataframe to file
 df.to_csv("pia_merged_incl_taxa.txt", sep ='\t', index=False)
-

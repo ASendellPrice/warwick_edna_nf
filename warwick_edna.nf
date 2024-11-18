@@ -242,12 +242,12 @@ process pia {
 	tuple val(sampleID), path(rep_seq_fasta), path(blast_out)
 	
 	output:
-	file("*.Full.txt")
-	file("*.PIA_inner_logs.txt")
-	file("*.Post-PIA.fasta")
-	file("*.Summary_Basic.txt")
-	file("*.Summary_Reads_MEGAN.txt")
-	file("*.Summary_Reads.txt")
+	tuple val(sampleID), 
+		path("${sampleID}_rep_seq.Full.txt"),
+		path("${sampleID}_rep_seq.PIA_inner_logs.txt"),
+		path("${sampleID}_rep_seq.Summary_Basic.txt"),
+		path("${sampleID}_rep_seq.Summary_Reads_MEGAN.txt"),
+		path("${sampleID}_rep_seq.Summary_Reads.txt")
 
 	script:
 	"""
@@ -257,6 +257,7 @@ process pia {
 	"""
 }
 
+
 /*
 ========================================================================================
 Merge pia "_basic.txt" files
@@ -265,10 +266,10 @@ Merge pia "_basic.txt" files
 
 process merge_pia {
 	publishDir "${params.outdir}/pia", mode: 'copy'
-	
+
 	input:
-	path pia_out_files from pia_ch
-	
+	path summary_files
+
 	output:
 	file("taxaIDs.txt")
 	file("taxa_info.txt")
@@ -276,44 +277,51 @@ process merge_pia {
 
 	script:
 	"""
-	#!/usr/bin/env python
+	#!/usr/bin/env python3
 
-	#Import required modules
 	import pandas as pd
 	import os
 
-	#Create a list of PIA "Summary_Basic.txt" files  
-	keyword = '_Basic.txt'
-	current_dir = os.getcwd()  # Get the current working directory
-	files = [f for f in os.listdir(current_dir) if os.path.isfile(f) and keyword in f]
+	# Create a list of PIA "Summary_Basic.txt" files from the input provided by Nextflow
+	files = ${summary_files.collect { "'${it}'" }.join(',')}
 
-	#Load first PIA file in list as pandas df 
-	sampleID = files[0].split(".")[0]
-	df = pd.read_csv(files[0], sep='\t', skiprows=11)
-	df = df.rename(columns={"Reads" : sampleID})
+	# Load the first PIA file as a pandas DataFrame
+	first_file = files[0].strip("'")
+	sampleID = os.path.basename(first_file).split(".")[0]
+	df = pd.read_csv(first_file, sep='\\t', skiprows=11)
+	df = df.rename(columns={"Reads": sampleID})
 
-	#Load subsequent PIA files and merge
-	for i in range(1,len(files)-1):
-		sampleID = files[i].split(".")[0]
-		df2 = pd.read_csv(files[i], sep='\t', skiprows=11)
-		df2 = df2.rename(columns={"Reads" : sampleID})
-		df = pd.merge(df, df2, how = 'outer')
+	# Iterate through remaining files and merge them
+	for file in files[1:]:
+		file = file.strip("'")
+		sampleID = os.path.basename(file).split(".")[0]
+		df2 = pd.read_csv(file, sep='\\t', skiprows=11)
+		df2 = df2.rename(columns={"Reads": sampleID})
+		df = pd.merge(df, df2, how="outer", on="# ID")
 
-	#Replae NAs with zero and rename column 1 to "taxa_ID"
+	# Replace NAs with zero and rename column 1 to "taxa_ID"
 	df = df.fillna(0)
 	df = df.rename(columns={"# ID": "taxa_ID"})
 
-	# Add taxonomic information
-	df["taxa_ID"].to_csv('taxaIDs.txt', sep ='\t', index=False, header=False)
+	# Save taxa_IDs for taxonomy enrichment
+	df["taxa_ID"].to_csv('taxaIDs.txt', sep='\\t', index=False, header=False)
+
+	# Run the taxaranks command to add taxonomic information
 	os.system('taxaranks -i taxaIDs.txt -o taxa_info.txt')
-	taxa = pd.read_csv('taxa_info.txt', sep='\t').rename(columns={"user_taxa": "taxa_ID"})
-	df = pd.merge(df, taxa, how = 'outer')
 
-	# Write dataframe to file
-	df.to_csv("pia_merged_incl_taxa.txt", sep ='\t', index=False)
+	# Load taxonomy info and merge with the main dataframe
+	taxa = pd.read_csv('taxa_info.txt', sep='\\t').rename(columns={"user_taxa": "taxa_ID"})
+	df = pd.merge(df, taxa, how="outer", on="taxa_ID")
 
+	# Write the final merged output to a file
+	df.to_csv("pia_merged_incl_taxa.txt", sep='\\t', index=False)
 	"""
 }
+
+
+
+
+
 
 /*
 ========================================================================================
@@ -357,9 +365,12 @@ workflow {
 	// Combine the outputs of mmseqs_cluster and blastn processes
 	combined_ch = clustered_sequences_ch.join(blast_output_ch)
 
-	// Run PIA (and collect output files)
-	pia_ch = pia(combined_ch).concat()
+	// Run PIA (plus collect output files and flatten into a single channel)
+	pia_ch = pia(combined_ch)
 
-	// Merge PIA files
-	//merge_pia(pia_ch)
+	// Split PIA outputs to create `pia_merge_in_ch` for `_rep_seq.Summary_Basic.txt` files
+	pia_merge_in_ch = pia_ch.map { sampleID, full_txt, inner_logs, summary_basic, summary_megan, summary_reads -> summary_basic}.collect()
+
+	// Merge PIA results
+	merge_pia(pia_merge_in_ch)
 }
