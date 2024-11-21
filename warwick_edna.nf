@@ -364,5 +364,5 @@ workflow {
 	pia_merge_in_ch = pia_ch.map { sampleID, full_txt, inner_logs, summary_basic, summary_megan, summary_reads -> summary_basic}.collect()
 
 	// Merge PIA results
-	merge_pia(pia_merge_in_ch)
+	//merge_pia(pia_merge_in_ch)
 }
