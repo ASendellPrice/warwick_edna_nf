@@ -282,45 +282,37 @@ process merge_pia {
 	import pandas as pd
 	import os
 
-	# Create a list of PIA "Summary_Basic.txt" files from the input provided by Nextflow
-	files = ${summary_files.collect { "'${it}'" }.join(',')}
+	#Create a list of PIA "Summary_Basic.txt" files  
+	keyword = '_Basic.txt'
+	current_dir = os.getcwd()  # Get the current working directory
+	files = [f for f in os.listdir(current_dir) if os.path.isfile(f) and keyword in f]
 
-	# Load the first PIA file as a pandas DataFrame
-	first_file = files[0].strip("'")
-	sampleID = os.path.basename(first_file).split(".")[0]
-	df = pd.read_csv(first_file, sep='\\t', skiprows=11)
-	df = df.rename(columns={"Reads": sampleID})
+	#Load first PIA file in list as pandas df 
+	sampleID = files[0].split(".")[0]
+	df = pd.read_csv(files[0], sep='\t', skiprows=11)
+	df = df.rename(columns={"Reads" : sampleID})
 
-	# Iterate through remaining files and merge them
-	for file in files[1:]:
-		file = file.strip("'")
-		sampleID = os.path.basename(file).split(".")[0]
-		df2 = pd.read_csv(file, sep='\\t', skiprows=11)
-		df2 = df2.rename(columns={"Reads": sampleID})
-		df = pd.merge(df, df2, how="outer", on="# ID")
+	#Load subsequent PIA files and merge
+	for i in range(1,len(files)-1):
+		sampleID = files[i].split(".")[0]
+		df2 = pd.read_csv(files[i], sep='\t', skiprows=11)
+		df2 = df2.rename(columns={"Reads" : sampleID})
+		df = pd.merge(df, df2, how = 'outer')
 
-	# Replace NAs with zero and rename column 1 to "taxa_ID"
+	#Replae NAs with zero and rename column 1 to "taxa_ID"
 	df = df.fillna(0)
 	df = df.rename(columns={"# ID": "taxa_ID"})
 
-	# Save taxa_IDs for taxonomy enrichment
-	df["taxa_ID"].to_csv('taxaIDs.txt', sep='\\t', index=False, header=False)
-
-	# Run the taxaranks command to add taxonomic information
+	# Add taxonomic information
+	df["taxa_ID"].to_csv('taxaIDs.txt', sep ='\t', index=False, header=False)
 	os.system('taxaranks -i taxaIDs.txt -o taxa_info.txt')
+	taxa = pd.read_csv('taxa_info.txt', sep='\t').rename(columns={"user_taxa": "taxa_ID"})
+	df = pd.merge(df, taxa, how = 'outer')
 
-	# Load taxonomy info and merge with the main dataframe
-	taxa = pd.read_csv('taxa_info.txt', sep='\\t').rename(columns={"user_taxa": "taxa_ID"})
-	df = pd.merge(df, taxa, how="outer", on="taxa_ID")
-
-	# Write the final merged output to a file
-	df.to_csv("pia_merged_incl_taxa.txt", sep='\\t', index=False)
+	# Write dataframe to file
+	df.to_csv("pia_merged_incl_taxa.txt", sep ='\t', index=False)
 	"""
 }
-
-
-
-
 
 
 /*
